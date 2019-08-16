@@ -7,6 +7,7 @@ from ..models import User
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ResetPasswordForm, ResetPasswordEmailForm
 from app.models import db
 from ..email import send_email
+from ..decorators import admin_required, permission_required
 
 
 @auth.route('/login', methods=['GET', 'POST'])
