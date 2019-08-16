@@ -16,9 +16,10 @@ def index():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.name.data).first()
         if user is None:
-            user = User(username=form.name.data)
-            db.session.add(user)
+            # user = User(username=form.name.data)
+            # db.session.add(user)
             session['known'] = False
+            return redirect(url_for('auth.register', username=form.name.data))
             # if app.config['FLASKY_ADMIN']:
             #     send_email(app.config['FLASKY_ADMIN'], '新用户', 'mail/new_user', user=user)
         else:
