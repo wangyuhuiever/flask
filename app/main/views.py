@@ -7,6 +7,7 @@ from . import main
 from .forms import NameForm
 from ..models import User
 from .. import db
+from ..email import send_email
 
 
 @main.route('/', methods=['GET', 'POST'])
