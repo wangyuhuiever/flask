@@ -42,12 +42,12 @@
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
-                {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('auth.logout') }}">退出登录</a> </li>
-                {% else %}
-                    <li><a href="{{ url_for('auth.login') }}">登录</a> </li>
-                {% endif %}
-            </ul>
+                    {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.login') }}">登录</a></li>
+                    {% endif %}
+                </ul>
             </div>
 
         </div>
@@ -56,6 +56,13 @@
 {% endblock %}
 
 {% block content %}
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+        </div>
+    {% endfor %}
+
 
     <div class="container">
         {% block page_content %}{% endblock %}
