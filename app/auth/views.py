@@ -4,7 +4,7 @@ from flask import render_template, redirect, request, url_for, flash
 from . import auth
 from flask_login import login_user, login_required, logout_user, current_user
 from ..models import User
-from .forms import LoginForm, RegistrationForm, ChangePasswordForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ResetPasswordForm, ResetPasswordEmailForm
 from app.models import db
 from ..email import send_email
 
@@ -55,6 +55,7 @@ def confirm(token):
         flash("注册完成。")
     else:
         flash("当前链接已失效，请重新发送邮件")
+        return redirect(url_for('.unconfirmed'))
     return redirect(url_for('main.index'))
 
 
@@ -95,3 +96,35 @@ def change_password():
             return redirect(url_for('.change_password'))
         return redirect(url_for('main.index'))
     return render_template('auth/change_password.html', form=form)
+
+
+@auth.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    form = ResetPasswordEmailForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            token = user.generate_confirmation_token()
+            send_email(user.email, '重置密码', 'auth/email/reset', user=current_user, token=token)
+            flash('一封邮件已经发送至您的邮箱。')
+            return redirect(url_for('main.index'))
+        else:
+            flash('当前用户不存在，请检查邮箱。')
+        return redirect(url_for('.reset_password'))
+    return render_template('auth/reset_password.html', form=form)
+
+
+@auth.route('/reset_password/<token>', methods=['GET', 'POST'])
+@login_required
+def confirm_password(token):
+    if current_user.confirm(token):
+        form = ResetPasswordForm()
+        if form.validate_on_submit():
+            current_user.password = form.new_password.data
+            flash('密码修改成功。')
+            return redirect(url_for('main.index'))
+        return render_template('auth/reset_password.html', form=form)
+
+    else:
+        flash('当前链接已失效，请重新发送邮件')
+        return redirect(url_for('auth.login'))
