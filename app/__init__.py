@@ -12,9 +12,13 @@ moment = Moment()
 db = SQLAlchemy()
 
 
-def create_app():
+def create_app(env_name=None):
     app = Flask(__name__)
     app.config.from_pyfile('../settings.py')
+    if env_name:
+        if env_name in ['testing']:
+            app.config.from_pyfile('../settings_test.py')
+
 
     bootstrap.init_app(app)
     mail.init_app(app)
