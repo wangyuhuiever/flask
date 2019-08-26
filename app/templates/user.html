@@ -20,4 +20,9 @@
         上次登录 {{ moment(user.last_seen).fromNow() }}
     </p>
     </div>
+    <div>
+    {% if user == current_user %}
+        <a class="btn btn-default" href="{{ url_for('main.edit_profile') }}">编辑个人资料</a>
+    {% endif %}
+    </div>
 {% endblock %}

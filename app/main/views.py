@@ -35,7 +35,7 @@ def user(username):
     return render_template('user.html', user=user)
 
 
-@main.route('/edit_profile', methods=['GET', 'POST'])
+@main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
     form = EditProfileForm()
