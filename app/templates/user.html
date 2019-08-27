@@ -1,27 +1,30 @@
 {% extends "base.html" %}
+{% import "_macros.html" as macros %}
 
 {% block page_content %}
     <div class="page-header">
-        <div>
-            <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}">
-        </div>
-        {% if user.name or user.location %}
+        <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=256) }}">
+        <div class="profile-header">
+            {% if user.name or user.location %}
+                <p>
+                    {% if user.name %}{{ user.name }}{% endif %}
+                    {% if user.location %}
+                        位置<a href="http://ditu.amap.com/search?query={{ user.location }}"
+                             target="_blank">{{ user.location }}</a>
+                    {% endif %}
+                </p>
+            {% endif %}
+            {% if current_user.is_administrator %}
+                <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+            {% endif %}
+            {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
             <p>
-                {% if user.name %}{{ user.name }}{% endif %}
-                {% if user.location %}
-                    位置<a href="http://ditu.amap.com/search?query={{ user.location }}"
-                         target="_blank">{{ user.location }}</a>
-                {% endif %}
+                注册日期 {{ moment(user.member_since).format('L') }}
             </p>
-        {% endif %}
-        {% if current_user.is_administrator() %}
-            <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
-        {% endif %}
-        {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
-        <p>
-            注册日期 {{ moment(user.member_since).format('L') }}
-            上次登录 {{ moment(user.last_seen).fromNow() }}
-        </p>
+            <p>
+                上次登录 {{ moment(user.last_seen).fromNow() }}
+            </p>
+        </div>
     </div>
     <div>
         {% if user == current_user %}
@@ -30,5 +33,12 @@
         {% if current_user.is_administrator %}
             <a class="btn btn-danger" href="{{ url_for('main.edit_profile_admin', id=user.id) }}">编辑个人资料（管理员）</a>
         {% endif %}
+    </div>
+    <div>
+        <h3>{% if user == current_user %}我{% else %}{{ user.username }}{% endif %}的文章</h3>
+        {% include "_posts.html" %}
+         <div class="pagination">
+            {{ macros.pagination_widget(pagination, '.index') }}
+        </div>
     </div>
 {% endblock %}

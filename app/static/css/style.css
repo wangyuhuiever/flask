@@ -1,0 +1,24 @@
+.profile-thumbnail {
+    position: absolute;
+}
+
+.profile-header {
+    min-height: 260px;
+    margin-left: 280px;
+}
+
+ul.post {
+    list-style-type: none;
+    padding: 0;
+    margin: 16px 0 0 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+div.post-date {
+    float: right;
+}
+
+div.post-content {
+    margin-left: 48px;
+    min-height: 48px;
+}
