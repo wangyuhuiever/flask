@@ -7,6 +7,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request
 import hashlib
 from datetime import datetime
+from .post import Post
 
 
 @login_manager.user_loader
@@ -165,6 +166,10 @@ class User(db.Model, UserMixin):
 
     def is_followed_by(self, user):
         return self.followers.filter_by(follower_id=user.id).first() is not None
+
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id == Post.author_id).filter(Follow.follower_id == self.id)
 
     @staticmethod
     def generate_fake(count=100):

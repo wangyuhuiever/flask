@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from flask import render_template, redirect, url_for, session, abort, flash, request, current_app
+from flask import render_template, redirect, url_for, session, abort, flash, request, current_app, make_response
 from flask_login import current_user, login_required
 from . import main
 from .forms import NameForm, EditProfileForm, EditProfileAdminForm, PostForm
@@ -17,13 +17,39 @@ def index():
         post = Post(body=form.body.data, author=current_user._get_current_object())
         db.session.add(post)
         return redirect(url_for('.index'))
+
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts
+    else:
+        query = Post.query
+
     page = request.args.get('page', 1, int)
-    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+    pagination = query.order_by(Post.timestamp.desc()).paginate(
         page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'], error_out=False
     )
     posts = pagination.items
-    return render_template('index.html', form=form, posts=posts, pagination=pagination, current_time=datetime.utcnow())
 
+    return render_template('index.html', form=form, posts=posts, pagination=pagination, current_time=datetime.utcnow(),
+                           show_followed=show_followed)
+
+
+@main.route('/all')
+@login_required
+def show_all():
+    res = make_response(redirect(url_for('.index')))
+    res.set_cookie('show_followed', '', max_age=30*24*60*60)
+    return res
+
+
+@main.route('/followed')
+@login_required
+def show_followed():
+    res = make_response(redirect(url_for('.index')))
+    res.set_cookie('show_followed', '1', max_age=30*24*60*60)
+    return res
 
 @main.route('/user/<username>')
 @login_required
