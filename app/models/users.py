@@ -152,7 +152,7 @@ class User(db.Model, UserMixin):
 
     def follow(self, user):
         if not self.is_following(user):
-            f = Follow(follower=self, followed=user)
+            f = Follow(followers=self, followed=user)
             db.session.add(f)
 
     def unfollow(self, user):
