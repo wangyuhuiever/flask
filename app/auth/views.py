@@ -5,7 +5,7 @@ from . import auth
 from flask_login import login_user, login_required, logout_user, current_user
 from ..models import User
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ResetPasswordForm, ResetPasswordEmailForm
-from app.models import db
+from app import db
 from ..email import send_email
 from ..decorators import admin_required, permission_required
 

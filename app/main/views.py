@@ -6,8 +6,8 @@ from flask_login import current_user, login_required
 from . import main
 from .forms import NameForm, EditProfileForm, EditProfileAdminForm, PostForm
 from ..models import User, Role, Permission, Post
-from .. import db
-from ..decorators import admin_required
+from app import db
+from ..decorators import admin_required, permission_required
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -31,8 +31,12 @@ def user(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         abort(404)
-    posts = user.posts.order_by(Post.timestamp.desc()).all()
-    return render_template('user.html', user=user, posts=posts)
+    page = request.args.get('page', 1, int)
+    pagination = Post.query.filter_by(author_id=user.id).order_by(Post.timestamp.desc()).paginate(
+        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'], error_out=False
+    )
+    posts = pagination.items
+    return render_template('user.html', user=user, posts=posts, pagination=pagination)
 
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
@@ -80,12 +84,14 @@ def edit_profile_admin(id):
 
 
 @main.route('/post/<int:id>')
+@login_required
 def post(id):
     post = Post.query.get_or_404(id)
     return render_template('post.html', posts=[post])
 
 
 @main.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit(id):
     post = Post.query.get_or_404(id)
     if current_user != post.author and not current_user.can(Permission.ADMINISTER):
@@ -98,3 +104,64 @@ def edit(id):
         return redirect(url_for('.post', id=post.id))
     form.body.data = post.body
     return render_template('edit_post.html', form=form)
+
+
+@main.route('/follow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def follow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('无此用户')
+        return redirect(url_for('.index'))
+    if current_user.is_following(user):
+        flash('你已经关注了当前用户！')
+        return redirect(url_for('.user', username=username))
+    current_user.follow(user)
+    flash("成功关注%s" % username)
+    return redirect(url_for('.user', username=username))
+
+
+@main.route('/unfollow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('无此用户')
+        return redirect(url_for('.index'))
+    if not current_user.is_following(user):
+        flash('你没有关注当前用户！')
+        return redirect(url_for('.user', username=username))
+    current_user.unfollow(user)
+    flash("成功取消关注%s" % username)
+    return redirect(url_for('.user', username=username))
+
+
+@main.route('/followers/<username>')
+@login_required
+def followers(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('不存在当前用户！')
+        return redirect(url_for('.index'))
+    page = request.args.get('page', 1, type=int)
+    pagination = user.followers.paginate(page, per_page=current_app.config['FLASKY_FOLLOWERS_PER_PAGE'],
+                                         error_out=False)
+    follows = [{'user': item.followers, 'timestamp': item.timestamp} for item in pagination.items]
+    return render_template('followers.html', user=user, title="关注者", endpoint='.followers', pagination=pagination,
+                           follows=follows)
+
+
+@main.route('/followed_by/<username>')
+@login_required
+def followed_by(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('不存在当前用户！')
+        return redirect(url_for('.index'))
+    page = request.args.get('page', 1, type=int)
+    pagination = user.followed.paginate(page, per_page=current_app.config['FLASKY_FOLLOWERS_PER_PAGE'], error_out=False)
+    follows = [{'user': item.followed, 'timestamp': item.timestamp} for item in pagination.items]
+    return render_template('followers.html', user=user, title="已关注", endpoint='.followed_by', pagination=pagination,
+                           follows=follows)

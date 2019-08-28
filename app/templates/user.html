@@ -24,6 +24,26 @@
             <p>
                 上次登录 {{ moment(user.last_seen).fromNow() }}
             </p>
+            <p>
+                {{ user.posts.count() }}篇文章。
+            </p>
+            {% if current_user.can(Permission.FOLLOW) and user != current_user %}
+                {% if not current_user.is_following(user) %}
+                    <a href="{{ url_for('.follow', username=user.username) }}" class="btn btn-primary">关注</a>
+                {% else %}
+                    <a href="{{ url_for('.unfollow', username=user.username) }}" class="btn btn-danger">取消关注</a>
+                {% endif %}
+            {% endif %}
+            <a href="{{ url_for('.followers', username=user.username) }}">
+                关注者：<span class="badge">{{ user.followers.count() }}</span>
+            </a>
+            <a href="{{ url_for('.followed_by', username=user.username) }}">
+                已关注：<span class="badge">{{ user.followed.count() }}</span>
+            </a>
+            {% if current_user.is_authenticated and user != current_user and user.is_following(current_user) %}
+                <span class="label label-default">关注了你</span>
+            {% endif %}
+
         </div>
     </div>
     <div>
@@ -37,7 +57,7 @@
     <div>
         <h3>{% if user == current_user %}我{% else %}{{ user.username }}{% endif %}的文章</h3>
         {% include "_posts.html" %}
-         <div class="pagination">
+        <div class="pagination">
             {{ macros.pagination_widget(pagination, '.index') }}
         </div>
     </div>
