@@ -91,8 +91,9 @@ class User(db.Model, UserMixin):
                                backref=db.backref('followers', lazy='joined'), lazy='dynamic',
                                cascade='all, delete-orphan')
     followers = db.relationship('Follow', foreign_keys=[Follow.followed_id],
-                               backref=db.backref('followed', lazy='joined'), lazy='dynamic',
-                               cascade='all, delete-orphan')
+                                backref=db.backref('followed', lazy='joined'), lazy='dynamic',
+                                cascade='all, delete-orphan')
+    comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

@@ -56,7 +56,9 @@
     </div>
     <div>
         <h3>{% if user == current_user %}我{% else %}{{ user.username }}{% endif %}的文章</h3>
-        {% include "_posts.html" %}
+        <div class="post-tabs">
+            {% include "_posts.html" %}
+        </div>
         <div class="pagination">
             {{ macros.pagination_widget(pagination, '.index') }}
         </div>
