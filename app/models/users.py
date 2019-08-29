@@ -106,6 +106,20 @@ class User(db.Model, UserMixin):
             if self.email and not self.avatar_hash:
                 self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
 
+    def generate_auth_token(self, expiration):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        r = s.dumps({'id': self.id})
+        return r.decode('utf-8')
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return None
+        return User.query.get(data['id'])
+
     @property
     def password(self):
         raise AttributeError('密码无法读取')
