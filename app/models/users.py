@@ -8,6 +8,7 @@ from flask import current_app, request
 import hashlib
 from datetime import datetime
 from .post import Post
+from flask import url_for
 
 
 @login_manager.user_loader
@@ -185,6 +186,18 @@ class User(db.Model, UserMixin):
     @property
     def followed_posts(self):
         return Post.query.join(Follow, Follow.followed_id == Post.author_id).filter(Follow.follower_id == self.id)
+
+    def to_json(self):
+        json_user = {
+            'url': url_for('api.get_user', id=self.id, _external=True),
+            'username': self.username,
+            'member_since': self.member_since,
+            'last_seen': self.last_seen,
+            'posts': url_for('api.get_user_posts', id=self.id, _external=True),
+            'followed_posts': url_for('api.get_user_followed_posts', id=self.id, _external=True),
+            'post_count': self.posts.count()
+        }
+        return json_user
 
     @staticmethod
     def generate_fake(count=100):
