@@ -8,6 +8,7 @@ from .forms import NameForm, EditProfileForm, EditProfileAdminForm, PostForm, Co
 from ..models import User, Role, Permission, Post, Comment
 from app import db
 from ..decorators import admin_required, permission_required
+from flask_sqlalchemy import get_debug_queries
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -237,3 +238,12 @@ def moderate_disable(id):
     comment.disabled = True
     db.session.add(comment)
     return redirect(url_for('.moderate', page=request.args.get('page', 1, type=int)))
+
+
+@main.after_app_request
+def after_request(response):
+    for query in get_debug_queries():
+        if query.duration >= current_app.config['FLASKY_SLOW_DB_QUERY_TIME']:
+            current_app.logger.warning('慢查询： %sn\n 参数： %s \n 耗时： %s\n 上下文: %s\n' %
+                                       query.statement, query.parameters, query.duration, query.context)
+    return response
